@@ -5,13 +5,14 @@ package com.erp.HirePilot.admindashboard.applications;
 
 
 
-import lombok.Getter;
-import lombok.Setter;
+
+import lombok.*;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class JobApplicationRequest {
     private String jobTitle;
-    private String employer;
-    private String status;     // Optional, default = APPLIED
+    private String companyName;
 }
