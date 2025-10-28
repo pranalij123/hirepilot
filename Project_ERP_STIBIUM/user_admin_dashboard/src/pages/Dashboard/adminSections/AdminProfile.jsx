@@ -1,24 +1,49 @@
-import { useState } from "react";
-import { useAuth } from "../../../context/AuthContext";
+import React, { useEffect, useState } from "react";
+import { useProfile } from "../../../context/ProfileContext";
 
 export default function AdminProfile() {
-  const { user } = useAuth();
+  const { profile, fetchProfile, updateProfile } = useProfile();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    name: user?.name || "Admin User",
-    email: user?.email || "admin@hirepilot.com",
-    role: user?.role || "Super Admin",
+    name: "",
+    email: "",
+    role: "",
+    joiningOn: "",
   });
 
+  // Fetch profile when page loads
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  // Update local state when profile data changes
+  useEffect(() => {
+    if (profile && profile.user) {
+      setFormData({
+        name: profile.user.name || "",
+        email: profile.user.email || "",
+        role: profile.user.role || profile.role || "",
+        joiningOn: profile.joiningOn || "January 2025",
+      });
+    }
+  }, [profile]);
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSave = () => {
-    // TODO: connect this with backend or context update
-    console.log("Updated profile:", formData);
+  const handleSave = async () => {
+    await updateProfile(formData); // Call backend update via ProfileContext
     setIsEditing(false);
   };
+
+  if (!profile) {
+    return (
+      <div className="text-center text-gray-600 mt-10 text-lg">
+        Loading profile...
+      </div>
+    );
+  }
 
   return (
     <div className="backdrop-blur-md bg-white/30 border border-white/40 p-10 rounded-2xl shadow-xl max-w-3xl mx-auto mt-10">
@@ -31,16 +56,14 @@ export default function AdminProfile() {
       <div className="flex flex-col sm:flex-row items-center sm:items-start sm:space-x-8 mb-8">
         <img
           src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-            user?.name || "Admin"
+            formData.name || "Admin"
           )}`}
           alt="Admin Avatar"
           className="w-28 h-28 rounded-full border-4 border-white/60 shadow-lg mb-4 sm:mb-0"
         />
 
         <div className="text-center sm:text-left">
-          <h3 className="text-2xl font-semibold text-black">
-            {formData.name}
-          </h3>
+          <h3 className="text-2xl font-semibold text-black">{formData.name}</h3>
           <p className="text-black/80">{formData.email}</p>
           <span className="inline-block mt-2 px-4 py-1 text-sm font-medium bg-amber-100 text-amber-700 rounded-full">
             {formData.role}
@@ -67,7 +90,7 @@ export default function AdminProfile() {
 
         <div className="bg-white/40 backdrop-blur-md p-4 rounded-lg border border-white/50 shadow-sm">
           <p className="text-sm font-medium text-black/70 mb-1">Joined On</p>
-          <p className="font-semibold">{user?.joined || "January 2025"}</p>
+          <p className="font-semibold">{formData.joiningOn}</p>
         </div>
       </div>
 

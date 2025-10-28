@@ -45,7 +45,7 @@ const register = async (form) => {
 
 
   // 🟡 LOGIN
- const login = async (username, password) => {
+const login = async (username, password) => {
   try {
     const response = await fetch("http://localhost:8080/auth/login", {
       method: "POST",
@@ -56,13 +56,16 @@ const register = async (form) => {
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Login failed");
 
-    // 🟡 Add this debug log here
     console.log("Received role from backend:", data.role);
 
+    // ✅ Store everything returned from backend
     const loggedUser = {
       username,
       role: data.role,
       token: data.token,
+      id: data.id,           // 🆕 Add this
+      name: data.name,       // 🆕 Add this
+      email: data.email,     // 🆕 Add this
     };
 
     // ✅ Save user data and token
@@ -70,8 +73,9 @@ const register = async (form) => {
     localStorage.setItem("user", JSON.stringify(loggedUser));
     localStorage.setItem("token", data.token);
     localStorage.setItem("role", data.role);
+    localStorage.setItem("id", data.id);   // 🆕 Optional but helpful
 
-    // ✅ Normalize and redirect
+    // ✅ Redirect based on role
     const role = data.role?.toLowerCase();
     if (role.includes("admin")) navigate("/dashboard/admin");
     else navigate("/dashboard/user");
