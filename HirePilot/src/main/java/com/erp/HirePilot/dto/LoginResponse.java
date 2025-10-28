@@ -7,8 +7,10 @@ public class LoginResponse {
     private String name;
     private String role;
     private String token;
+    private Integer Id;
 
-    private long expiresIn;
+  
+	private long expiresIn;
 
 	public String getEmail() {
 		return email;
@@ -17,6 +19,12 @@ public class LoginResponse {
 	public void setEmail(String email) {
 		this.email = email;
 	}
+
+	public Integer getId() {
+		return Id;
+	}
+
+	
 
 	public String getName() {
 		return name;

@@ -84,6 +84,7 @@ public class AuthenticationService {
                 user.getName(),    // Name
                 user.getEmail(),   // Email
                 user.getRole(),    // Role
+                user.getId(),
                 token              // Token
         );
     }

@@ -1,58 +1,58 @@
 package com.erp.HirePilot.admindashboard.profile.service;
 
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import com.erp.HirePilot.admindashboard.profile.dto.AdminProfileRequestDto;
-import com.erp.HirePilot.admindashboard.profile.dto.AdminProfileResponseDto;
+
+
 import com.erp.HirePilot.admindashboard.profile.entity.AdminProfile;
-import com.erp.HirePilot.admindashboard.profile.repo.AdminProfileRepository;
+import com.erp.HirePilot.admindashboard.profile.repo.AdminProfileRepo;
 import com.erp.HirePilot.entity.User;
 import com.erp.HirePilot.repo.UserRepo;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
+@RequiredArgsConstructor
 public class AdminProfileService {
 
-    private final UserRepo userRepository;
-    private final AdminProfileRepository adminProfileRepository;
+    private final AdminProfileRepo adminProfileRepo;
+    private final UserRepo userRepo;
 
-    public AdminProfileService(UserRepo userRepository, AdminProfileRepository adminProfileRepository) {
-        this.userRepository = userRepository;
-        this.adminProfileRepository = adminProfileRepository;
+    // Fetch profile
+    public AdminProfile getProfile(Long userId) {
+        return adminProfileRepo.findByUserId(userId)
+                .orElseGet(() -> {
+                    // if profile doesn't exist yet, return basic info from User
+                    User user = userRepo.findById(userId)
+                            .orElseThrow(() -> new RuntimeException("User not found"));
+                    AdminProfile temp = new AdminProfile();
+                    temp.setUser(user);
+                    temp.setRole(null);
+                    temp.setJoiningOn(null);
+                    return temp;
+                });
     }
 
-    public AdminProfileResponseDto getProfile(Long userId) {
-        User user = userRepository.findById(userId)
+    // Update or create profile
+    public AdminProfile updateProfile(Long userId, String name, String role) {
+        User user = userRepo.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        AdminProfileResponseDto response = new AdminProfileResponseDto();
-        response.setName(user.getName());
-        response.setEmail(user.getEmail());
+        // Update user name
+        user.setName(name);
+        userRepo.save(user);
 
-        adminProfileRepository.findById(userId).ifPresent(profile -> {
-            response.setAdminRole(profile.getAdminRole());
-            response.setJoiningDate(profile.getJoiningDate());
-        });
+        // Update or create admin profile
+        AdminProfile profile = adminProfileRepo.findByUserId(userId)
+                .orElseGet(() -> {
+                    AdminProfile newProfile = new AdminProfile();
+                    newProfile.setUser(user);
+                    newProfile.setJoiningOn(LocalDateTime.now());
+                    return newProfile;
+                });
 
-        return response;
-    }
-
-    @Transactional
-    public AdminProfileResponseDto updateProfile(Long userId, AdminProfileRequestDto dto) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        user.setName(dto.getName());
-        userRepository.save(user);
-
-        AdminProfile profile = adminProfileRepository.findById(userId)
-                .orElse(new AdminProfile());
-
-        profile.setUser(user);
-        profile.setAdminRole(dto.getAdminRole());
-        profile.setJoiningDate(dto.getJoiningDate());
-
-        adminProfileRepository.save(profile);
-        return getProfile(userId);
+        profile.setRole(role);
+        return adminProfileRepo.save(profile);
     }
 }
